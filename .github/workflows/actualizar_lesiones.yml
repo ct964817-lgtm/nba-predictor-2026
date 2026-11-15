@@ -1,0 +1,56 @@
+name: Actualizar Lesiones NBA
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Se ejecuta cada 6 horas
+  workflow_dispatch:      # Permite ejecutarlo manualmente desde GitHub
+
+jobs:
+  update-injuries:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias
+        run: pip install requests pandas
+
+      - name: Descargar lesiones de ESPN
+        run: |
+          python -c "
+          import requests
+          import pandas as pd
+          
+          url = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries'
+          try:
+              data = requests.get(url, timeout=10).json()
+              lesiones = []
+              for team_data in data.get('injuries', []):
+                  team_name = team_data.get('displayName', 'Desconocido')
+                  for injury in team_data.get('injuries', []):
+                      athlete = injury.get('athlete', {})
+                      lesiones.append({
+                          'team': team_name,
+                          'player_name': athlete.get('displayName', 'Jugador'),
+                          'current_status': injury.get('status', 'Desconocido'),
+                          'reason': injury.get('shortComment', '') or injury.get('details', {}).get('type', '')
+                      })
+              df = pd.DataFrame(lesiones)
+              df.to_csv('lesiones_nba.csv', index=False)
+              print(f'✅ {len(df)} jugadores descargados.')
+          except Exception as e:
+              print(f'Error: {e}')
+          "
+
+      - name: Hacer commit y push
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add lesiones_nba.csv
+          git commit -m "🤖 Auto-actualización de lesiones NBA" || echo "No hay cambios"
+          git push
