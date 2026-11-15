@@ -6,6 +6,8 @@ from scipy.stats import norm
 import pickle
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
+st.cache_data.clear()  # Limpiar caché al iniciar
+
 st.title("🏀 NBA Predictor 2026-27 (v2 - Pace & Ratings)")
 st.markdown("Sistema avanzado con métricas de eficiencia y ritmo de juego.")
 
