@@ -18,12 +18,6 @@ def load_data():
     return df
 
 @st.cache_data
-def load_logos():
-    if os.path.exists("logos_nba.csv"):
-        return pd.read_csv("logos_nba.csv")
-    return pd.DataFrame(columns=['TeamName', 'LogoURL'])
-
-@st.cache_data
 def load_injuries():
     if os.path.exists("lesiones_nba.csv"):
         df = pd.read_csv("lesiones_nba.csv")
@@ -39,7 +33,6 @@ def load_models():
 
 try:
     df = load_data()
-    logos = load_logos()
     lesiones = load_injuries()
     models = load_models()
     sigma = models['sigma']
@@ -47,7 +40,27 @@ except Exception as e:
     st.error(f"Error cargando archivos: {e}")
     st.stop()
 
-logo_dict = dict(zip(logos['TeamName'], logos['LogoURL']))
+# DICCIONARIO DE LOGOS DIRECTO EN EL CÓDIGO
+logos = {
+    'Atlanta Hawks': 'atl', 'Boston Celtics': 'bos', 'Brooklyn Nets': 'bkn',
+    'Charlotte Hornets': 'cha', 'Chicago Bulls': 'chi', 'Cleveland Cavaliers': 'cle',
+    'Dallas Mavericks': 'dal', 'Denver Nuggets': 'den', 'Detroit Pistons': 'det',
+    'Golden State Warriors': 'gs', 'Houston Rockets': 'hou', 'Indiana Pacers': 'ind',
+    'LA Clippers': 'lac', 'Los Angeles Lakers': 'lal', 'Memphis Grizzlies': 'mem',
+    'Miami Heat': 'mia', 'Milwaukee Bucks': 'mil', 'Minnesota Timberwolves': 'min',
+    'New Orleans Pelicans': 'no', 'New York Knicks': 'ny', 'Oklahoma City Thunder': 'okc',
+    'Orlando Magic': 'orl', 'Philadelphia 76ers': 'phi', 'Phoenix Suns': 'phx',
+    'Portland Trail Blazers': 'por', 'Sacramento Kings': 'sac', 'San Antonio Spurs': 'sa',
+    'Toronto Raptors': 'tor', 'Utah Jazz': 'utah', 'Washington Wizards': 'wsh'
+}
+
+def get_logo_html(team_name, height=40):
+    # Busca la abreviatura en el diccionario
+    for nombre, abbr in logos.items():
+        if nombre in team_name or team_name in nombre:
+            url = f"https://a.espncdn.com/i/teamlogos/nba/500/{abbr}.png"
+            return f'<img src="{url}" height="{height}" style="vertical-align: middle; margin-right: 10px;">'
+    return "" # Si no encuentra, no muestra imagen
 
 st.sidebar.header("Filtros")
 linea_apuestas = st.sidebar.number_input("Línea de apuestas (Puntos Totales)", min_value=180.0, max_value=280.0, value=220.5, step=0.5)
@@ -71,24 +84,19 @@ else:
             col1, col2, col3 = st.columns([2, 2, 2])
             
             with col1:
-                # LOGOS
-                c1, c2 = st.columns([1, 3])
-                with c1:
-                    if row['away_team'] in logo_dict:
-                        st.image(logo_dict[row['away_team']], width=50)
-                with c2:
-                    st.markdown(f"**{row['away_team']}**")
+                # MOSTRAR LOGOS CON HTML
+                logo_away = get_logo_html(row['away_team'])
+                logo_home = get_logo_html(row['home_team'])
                 
-                st.markdown("<p style='text-align: center; margin: 0;'>@</p>", unsafe_allow_html=True)
+                html_away = f"<div style='display:flex; align-items:center; margin-bottom:5px;'>{logo_away} <span style='font-size:16px; font-weight:bold;'>{row['away_team']}</span></div>"
+                html_home = f"<div style='display:flex; align-items:center;'>{logo_home} <span style='font-size:16px; font-weight:bold;'>{row['home_team']}</span></div>"
                 
-                c3, c4 = st.columns([1, 3])
-                with c3:
-                    if row['home_team'] in logo_dict:
-                        st.image(logo_dict[row['home_team']], width=50)
-                with c4:
-                    st.markdown(f"**{row['home_team']}**")
+                st.markdown(html_away, unsafe_allow_html=True)
+                st.markdown("<div style='margin-left: 20px; font-size:12px; color:gray;'>@</div>", unsafe_allow_html=True)
+                st.markdown(html_home, unsafe_allow_html=True)
                 
                 st.caption(f"Game ID: {row['gameId']}")
+                st.markdown("---")
                 
                 # H2H
                 st.markdown("**Historial Directo (Últimos 10)**")
@@ -97,6 +105,8 @@ else:
                     st.write(f"⚔️ {row['away_team']}: **{row['h2h_away_wins']}** victorias")
                 else:
                     st.write("No hay historial reciente.")
+                
+                st.markdown("---")
                 
                 # LESIONES
                 st.markdown("**Reporte de Lesiones**")
