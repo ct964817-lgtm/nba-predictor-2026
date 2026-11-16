@@ -75,7 +75,8 @@ def get_ultimos_totales(team_name, n=5):
     return team_games[['date', 'pred_total_pts']].set_index('date')
 
 st.sidebar.header("Filtros")
-linea_apuestas = st.sidebar.number_input("Línea de apuestas (Puntos Totales)", min_value=180.0, max_value=280.0, value=220.5, step=0.5)
+linea_apuestas = st.sidebar.number_input("Línea Total Puntos", min_value=180.0, max_value=280.0, value=220.5, step=0.5)
+linea_spread = st.sidebar.number_input("Línea Spread (Local)", min_value=-25.0, max_value=25.0, value=-4.5, step=0.5, help="Ingresa el spread del local. Si el local es favorito, usa negativo (ej. -4.5). Si es underdog, positivo (ej. +4.5).")
 
 fechas_disponibles = sorted(df['date'].dt.date.unique())
 fecha_seleccionada = st.sidebar.selectbox("Selecciona una fecha", fechas_disponibles)
@@ -120,15 +121,25 @@ else:
         prob_over = 1 - norm.cdf(linea_apuestas, loc=pred_total, scale=sigma)
         prob_under = 1 - prob_over
         
-        # --- NUEVOS CÁLCULOS: HANDICAP Y PUNTOS POR EQUIPO ---
+        # --- CÁLCULOS DE HANDICAP Y PUNTOS POR EQUIPO ---
         p_home = row['p_home']
-        # Estimación del margen (Spread) basada en la probabilidad de victoria
-        # Un 50% de prob es 0 de margen. A mayor prob, mayor margen (Escala de 0 a 15 pts)
+        
+        # Estimación del margen esperado (diferencia de puntos)
+        # Usamos una escala de 20 puntos para la diferencia máxima
         margen_esperado = (p_home - 0.5) * 20 
         
-        # Puntos estimados para cada equipo
         pts_local_estimados = (pred_total / 2) + (margen_esperado / 2)
         pts_visita_estimados = (pred_total / 2) - (margen_esperado / 2)
+        
+        # Calcular probabilidad de cubrir el Spread
+        # Si la línea del local es -4.5, necesitamos que gane por 5 o más.
+        # Usamos el margen esperado y una desviación estándar para el margen (asumimos sigma * 0.8)
+        sigma_spread = sigma * 0.8 
+        
+        # Probabilidad de que el local cubra el spread (gane por más de la línea)
+        # Si la línea es negativa (local favorito), necesita ganar por más de abs(linea)
+        prob_local_cubre = 1 - norm.cdf(linea_spread, loc=margen_esperado, scale=sigma_spread)
+        prob_visita_cubre = 1 - prob_local_cubre
         
         with st.container():
             col1, col2, col3 = st.columns([2, 2, 2])
@@ -174,11 +185,10 @@ else:
                 st.write(f"✈️ {row['away_team']}: **{row['p_away']:.1%}**")
                 
                 st.markdown("---")
-                st.markdown("**Handicap (Spread)**")
-                if margen_esperado > 0:
-                    st.write(f"🏠 {eq_local} **-{margen_esperado:.1f}**")
-                else:
-                    st.write(f"✈️ {eq_visita} **-{abs(margen_esperado):.1f}**")
+                st.markdown(f"**Handicap (Spread: {linea_spread})**")
+                
+                st.write(f"🏠 {eq_local} ({linea_spread}): **{prob_local_cubre:.1%}**")
+                st.write(f"✈️ {eq_visita} ({-linea_spread:+}): **{prob_visita_cubre:.1%}**")
                 
             with col3:
                 st.markdown(f"**Puntos Totales (Línea: {linea_apuestas})**")
@@ -197,7 +207,7 @@ else:
                     st.success("🔥 VALUE BET: UNDER")
                     
                 st.markdown("---")
-                st.markdown("**Puntos por Equipo**")
+                st.markdown("**Puntos por Equipo (Estimados)**")
                 st.write(f"🏠 {eq_local}: **{pts_local_estimados:.1f} pts**")
                 st.write(f"✈️ {eq_visita}: **{pts_visita_estimados:.1f} pts**")
             
@@ -220,6 +230,6 @@ else:
             st.divider()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Modelo v6:** XGBoost + Pace + Ratings + Lesiones + Spread.")
+st.sidebar.markdown("**Modelo v7:** XGBoost + Pace + Ratings + Lesiones + Spread Probabilidades.")
 st.sidebar.markdown(f"**Precisión Ganador:** ~64.7%")
 st.sidebar.markdown(f"**MAE Puntos:** 12.4 pts")
