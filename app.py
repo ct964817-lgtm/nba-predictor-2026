@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
 st.title("🏀 NBA Predictor 2026-27")
-st.markdown("Sistema avanzado con métricas de eficiencia, historial, lesiones ponderadas y gráficos.")
+st.markdown("Sistema avanzado: Totales, Ganador, Handicap y Puntos por Equipo.")
 
 @st.cache_data
 def load_data():
@@ -94,21 +94,15 @@ else:
         inj_local = lesiones[lesiones['team'].str.contains(eq_local.split()[-1], case=False, na=False)]
         inj_visita = lesiones[lesiones['team'].str.contains(eq_visita.split()[-1], case=False, na=False)]
         
-        # --- NUEVA LÓGICA DE PENALIZACIÓN POR NIVELES ---
         penalty_local = 0
         for _, inj in inj_local.iterrows():
             if inj['current_status'] in ['Out', 'Day-To-Day']:
                 jugador = inj['player_name']
                 ppg = ppg_dict.get(jugador, 10.0)
-                # Si es Day-To-Day, el impacto se reduce a la mitad (50% de jugar)
                 factor_duda = 0.5 if inj['current_status'] == 'Day-To-Day' else 1.0
-                
-                if ppg >= 25:
-                    penalty_local += (ppg * 0.25 * factor_duda) # Estrella
-                elif ppg >= 15:
-                    penalty_local += (ppg * 0.15 * factor_duda) # Titular
-                else:
-                    penalty_local += (ppg * 0.05 * factor_duda) # Suplente
+                if ppg >= 25: penalty_local += (ppg * 0.25 * factor_duda)
+                elif ppg >= 15: penalty_local += (ppg * 0.15 * factor_duda)
+                else: penalty_local += (ppg * 0.05 * factor_duda)
         
         penalty_visita = 0
         for _, inj in inj_visita.iterrows():
@@ -116,19 +110,25 @@ else:
                 jugador = inj['player_name']
                 ppg = ppg_dict.get(jugador, 10.0)
                 factor_duda = 0.5 if inj['current_status'] == 'Day-To-Day' else 1.0
-                
-                if ppg >= 25:
-                    penalty_visita += (ppg * 0.25 * factor_duda)
-                elif ppg >= 15:
-                    penalty_visita += (ppg * 0.15 * factor_duda)
-                else:
-                    penalty_visita += (ppg * 0.05 * factor_duda)
+                if ppg >= 25: penalty_visita += (ppg * 0.25 * factor_duda)
+                elif ppg >= 15: penalty_visita += (ppg * 0.15 * factor_duda)
+                else: penalty_visita += (ppg * 0.05 * factor_duda)
         
         pred_total_base = row['pred_total_pts']
         pred_total = pred_total_base - (penalty_local + penalty_visita)
         
         prob_over = 1 - norm.cdf(linea_apuestas, loc=pred_total, scale=sigma)
         prob_under = 1 - prob_over
+        
+        # --- NUEVOS CÁLCULOS: HANDICAP Y PUNTOS POR EQUIPO ---
+        p_home = row['p_home']
+        # Estimación del margen (Spread) basada en la probabilidad de victoria
+        # Un 50% de prob es 0 de margen. A mayor prob, mayor margen (Escala de 0 a 15 pts)
+        margen_esperado = (p_home - 0.5) * 20 
+        
+        # Puntos estimados para cada equipo
+        pts_local_estimados = (pred_total / 2) + (margen_esperado / 2)
+        pts_visita_estimados = (pred_total / 2) - (margen_esperado / 2)
         
         with st.container():
             col1, col2, col3 = st.columns([2, 2, 2])
@@ -173,6 +173,13 @@ else:
                 st.write(f"🏠 {row['home_team']}: **{row['p_home']:.1%}**")
                 st.write(f"✈️ {row['away_team']}: **{row['p_away']:.1%}**")
                 
+                st.markdown("---")
+                st.markdown("**Handicap (Spread)**")
+                if margen_esperado > 0:
+                    st.write(f"🏠 {eq_local} **-{margen_esperado:.1f}**")
+                else:
+                    st.write(f"✈️ {eq_visita} **-{abs(margen_esperado):.1f}**")
+                
             with col3:
                 st.markdown(f"**Puntos Totales (Línea: {linea_apuestas})**")
                 
@@ -188,6 +195,11 @@ else:
                     st.success("🔥 VALUE BET: OVER")
                 elif prob_under > 0.60:
                     st.success("🔥 VALUE BET: UNDER")
+                    
+                st.markdown("---")
+                st.markdown("**Puntos por Equipo**")
+                st.write(f"🏠 {eq_local}: **{pts_local_estimados:.1f} pts**")
+                st.write(f"✈️ {eq_visita}: **{pts_visita_estimados:.1f} pts**")
             
             st.markdown("---")
             st.markdown("**📈 Tendencia de Puntos Totales (Últimos 5 partidos)**")
@@ -201,7 +213,6 @@ else:
                     chart_data[eq_local] = tendencia_local['pred_total_pts'].values
                 if len(tendencia_visita) > 0:
                     chart_data[eq_visita] = tendencia_visita['pred_total_pts'].values
-                
                 st.line_chart(chart_data)
             else:
                 st.caption("No hay suficientes datos para graficar.")
@@ -209,6 +220,6 @@ else:
             st.divider()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Modelo v5:** XGBoost + Pace + Ratings + Lesiones Ponderadas.")
+st.sidebar.markdown("**Modelo v6:** XGBoost + Pace + Ratings + Lesiones + Spread.")
 st.sidebar.markdown(f"**Precisión Ganador:** ~64.7%")
 st.sidebar.markdown(f"**MAE Puntos:** 12.4 pts")
