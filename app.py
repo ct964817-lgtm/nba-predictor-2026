@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
 st.title("🏀 NBA Predictor 2026-27")
-st.markdown("Sistema avanzado con métricas de eficiencia, historial, lesiones y gráficos de rendimiento.")
+st.markdown("Sistema avanzado con métricas de eficiencia, historial, lesiones ponderadas y gráficos.")
 
 @st.cache_data
 def load_data():
@@ -94,19 +94,35 @@ else:
         inj_local = lesiones[lesiones['team'].str.contains(eq_local.split()[-1], case=False, na=False)]
         inj_visita = lesiones[lesiones['team'].str.contains(eq_visita.split()[-1], case=False, na=False)]
         
+        # --- NUEVA LÓGICA DE PENALIZACIÓN POR NIVELES ---
         penalty_local = 0
         for _, inj in inj_local.iterrows():
             if inj['current_status'] in ['Out', 'Day-To-Day']:
                 jugador = inj['player_name']
                 ppg = ppg_dict.get(jugador, 10.0)
-                penalty_local += (ppg * 0.15)
+                # Si es Day-To-Day, el impacto se reduce a la mitad (50% de jugar)
+                factor_duda = 0.5 if inj['current_status'] == 'Day-To-Day' else 1.0
+                
+                if ppg >= 25:
+                    penalty_local += (ppg * 0.25 * factor_duda) # Estrella
+                elif ppg >= 15:
+                    penalty_local += (ppg * 0.15 * factor_duda) # Titular
+                else:
+                    penalty_local += (ppg * 0.05 * factor_duda) # Suplente
         
         penalty_visita = 0
         for _, inj in inj_visita.iterrows():
             if inj['current_status'] in ['Out', 'Day-To-Day']:
                 jugador = inj['player_name']
                 ppg = ppg_dict.get(jugador, 10.0)
-                penalty_visita += (ppg * 0.15)
+                factor_duda = 0.5 if inj['current_status'] == 'Day-To-Day' else 1.0
+                
+                if ppg >= 25:
+                    penalty_visita += (ppg * 0.25 * factor_duda)
+                elif ppg >= 15:
+                    penalty_visita += (ppg * 0.15 * factor_duda)
+                else:
+                    penalty_visita += (ppg * 0.05 * factor_duda)
         
         pred_total_base = row['pred_total_pts']
         pred_total = pred_total_base - (penalty_local + penalty_visita)
@@ -173,7 +189,6 @@ else:
                 elif prob_under > 0.60:
                     st.success("🔥 VALUE BET: UNDER")
             
-            # GRÁFICO NATIVO DE STREAMLIT
             st.markdown("---")
             st.markdown("**📈 Tendencia de Puntos Totales (Últimos 5 partidos)**")
             
@@ -181,7 +196,6 @@ else:
             tendencia_visita = get_ultimos_totales(eq_visita)
             
             if len(tendencia_local) > 0 or len(tendencia_visita) > 0:
-                # Unir los datos para el gráfico
                 chart_data = pd.DataFrame()
                 if len(tendencia_local) > 0:
                     chart_data[eq_local] = tendencia_local['pred_total_pts'].values
@@ -195,6 +209,6 @@ else:
             st.divider()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Modelo v4:** XGBoost + Pace + Ratings + Lesiones + Gráficos.")
+st.sidebar.markdown("**Modelo v5:** XGBoost + Pace + Ratings + Lesiones Ponderadas.")
 st.sidebar.markdown(f"**Precisión Ganador:** ~64.7%")
-st.sidebar.markdown(f"**MAE Puntos:** 12.5 pts")
+st.sidebar.markdown(f"**MAE Puntos:** 12.4 pts")
