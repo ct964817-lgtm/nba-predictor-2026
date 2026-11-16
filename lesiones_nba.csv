@@ -1,6 +1,6 @@
 team,player_name,current_status,reason
-Atlanta Hawks,Jock Landale,Out,"Landale (hip) is out for Sunday's game against Bucks, Brad Rowland of the Locked On Podcast Network reports."
-Atlanta Hawks,Kingston Flemings,Out,Flemings (back) has been ruled out for Sunday's game against the Bucks.
+Atlanta Hawks,Jock Landale,Day-To-Day,"Landale (hip) is out for Sunday's game against Bucks, Brad Rowland of the Locked On Podcast Network reports."
+Atlanta Hawks,Kingston Flemings,Day-To-Day,Flemings (back) has been ruled out for Sunday's game against the Bucks.
 Atlanta Hawks,Mouhamed Gueye,Out,"Gueye (foot) is ready to begin on-court activities and will be re-evaluated in four weeks, Brad Rowland of the Locked On Podcast Network reports."
 Atlanta Hawks,Asa Newell,Out,Newell (toe) has been ruled out for Friday's game against Chicago.
 Atlanta Hawks,Henri Veesaar,Out,"Veesaar was diagnosed with a torn right ACL and is expected to miss the 2026-27 season, the Hawks announced Monday."
@@ -14,9 +14,9 @@ Cleveland Cavaliers,Peyton Watson,Day-To-Day,Watson (abdominal soreness) is ques
 Cleveland Cavaliers,Evan Mobley,Out,Mobley (toe) has been ruled out for Monday's game against Chicago.
 Cleveland Cavaliers,Sam Merrill,Out,Merrill (elbow) has been ruled out for Monday's game against the Bulls.
 Cleveland Cavaliers,Nae'Qwan Tomlin,Out,"Tomlin is set to miss several weeks with a lower back stress reaction, Chris Fedor of The Cleveland Plain Dealer reports."
-Dallas Mavericks,Santi Aldama,Out,Aldama (ankle) is out for Sunday's game against the Celtics.
-Dallas Mavericks,Max Christie,Out,Christie (ankle) has been ruled out for Sunday's game against the Celtics.
-Dallas Mavericks,Kyrie Irving,Out,Irving (knee) has been ruled out for Sunday's game against the Celtics.
+Dallas Mavericks,Max Christie,Day-To-Day,Christie (ankle) has been ruled out for Sunday's game against the Celtics.
+Dallas Mavericks,Santi Aldama,Day-To-Day,Aldama (ankle) is out for Sunday's game against the Celtics.
+Dallas Mavericks,Kyrie Irving,Day-To-Day,Irving (knee) has been ruled out for Sunday's game against the Celtics.
 Dallas Mavericks,Dereck Lively II,Out,Lively (foot) is listed as out for Thursday's game in Minnesota.
 Dallas Mavericks,Tarik Biberovic,Out,Biberovic (heel) is out for Thursday's game against Minnesota.
 Dallas Mavericks,Sergio de Larrea,Out,De Larrea (knee) has been ruled out for Thursday's game at Minnesota.
@@ -31,8 +31,8 @@ Golden State Warriors,Brandon Williams,Out,"Williams (hamstring) will miss at le
 Golden State Warriors,Kristaps Porzingis,Out,Porzingis announced on his social media that he's stepping away from basketball.
 Golden State Warriors,Moses Moody,Out,"Moody (knee) is progressing toward a potential return between December and January after rupturing his left patellar tendon in March, Anthony Slater of ESPN reports."
 Golden State Warriors,Jimmy Butler III,Out,"Butler (knee) could return sometime between January and February as he continues recovering from a torn right ACL, Anthony Slater of ESPN reports."
+Houston Rockets,Fred VanVleet,Day-To-Day,VanVleet (right knee injury management) has been ruled out for Sunday's game against the Wizards.
 Houston Rockets,Clint Capela,Out,Capela (ankle) has been ruled out for Sunday's game at Washington.
-Houston Rockets,Fred VanVleet,Out,VanVleet (right knee injury management) has been ruled out for Sunday's game against the Wizards.
 Houston Rockets,Marcus Smart,Suspension,"Smart has been suspended three games for throwing a punch during Wednesday's matchup against Golden State, Shams Charania of ESPN reports."
 Indiana Pacers,Andrew Nembhard,Day-To-Day,"Nembhard (hip) has been ruled out for Sunday's game against the 76ers, Tony East of Forbes.com reports."
 Indiana Pacers,Tyrese Haliburton,Out,"Head coach Rick Carlisle said Wednesday that Haliburton (hamstring) will miss at least 10 more days, Alex Golden of SI.com reports."
@@ -42,7 +42,7 @@ LA Clippers,Brandon Ingram,Out,"Ingram (Achilles) won't play in Friday's game ag
 LA Clippers,Yanic Konan Niederhauser,Out,"Niederhauser (foot) is out for Tuesday's game against Phoenix, Ohm Youngmisuk of ESPN.com reports."
 LA Clippers,Bradley Beal,Out,"Beal (knee) will not be ready for the start of the regular season, NBA writer Justin Russo reports."
 LA Clippers,Jordan Miller,Out,"Miller underwent surgery Wednesday to repair a torn left rotator cuff and will be re-evaluated in six months, per Law Murray of The Athletic."
-Los Angeles Lakers,Austin Reaves,Out,"Reaves (heel) has been ruled out for Sunday's game against the Suns, Daniel Starkand of LakersNation.com reports."
+Los Angeles Lakers,Austin Reaves,Day-To-Day,"Reaves (heel) has been ruled out for Sunday's game against the Suns, Daniel Starkand of LakersNation.com reports."
 Memphis Grizzlies,GG Jackson,Out,Jackson (foot) is out for Monday's game against Washington.
 Memphis Grizzlies,Isaiah Stewart,Day-To-Day,Stewart is questionable for Monday's game against the Wizards due to an illness.
 Memphis Grizzlies,Ty Jerome,Out,Jerome (hip) has been ruled out for Monday's game against the Wizards.
@@ -51,8 +51,8 @@ Memphis Grizzlies,Zach Edey,Day-To-Day,Edey (ankle) is questionable for Monday's
 Memphis Grizzlies,Scotty Pippen Jr.,Out,"Pippen (back) remains out for Wednesday's game against Denver, Michael Wallace of the Grizzlies' official site reports."
 Memphis Grizzlies,Richie Saunders,Out,"Saunders signed a two-way contract with the Grizzlies on Saturday, Shams Charania of ESPN reports."
 Miami Heat,Pelle Larsson,Day-To-Day,Larsson (illness) is questionable to play in Monday's game against the Rockets.
+Milwaukee Bucks,Ryan Rollins,Day-To-Day,Rollins (illness) is out for Sunday's game against the Hawks.
 Milwaukee Bucks,Ousmane Dieng,Out,"Dieng will undergo a procedure to repair a fractured left finger Monday, Justin Garcia of the Milwaukee Bucks Radio Network reports."
-Milwaukee Bucks,Ryan Rollins,Out,Rollins (illness) is out for Sunday's game against the Hawks.
 Minnesota Timberwolves,Jaylen Clark,Out,Clark (hamstring) has been ruled out for the next two weeks.
 Minnesota Timberwolves,Anthony Edwards,Out,"Edwards underwent a successful arthroscopic procedure on his right knee Thursday, the Timberwolves announced."
 Minnesota Timberwolves,Donte DiVincenzo,Out,"DiVincenzo (Achilles) remains confident that he'll return during the 2026-27 season, Jon Krawczynski of The Athletic reports."
@@ -80,23 +80,23 @@ Portland Trail Blazers,Chris Youngblood,Out,Youngblood (foot) is out for Monday'
 Portland Trail Blazers,Vit Krejci,Out,"Krejci underwent surgery on his fractured left ankle Wednesday and will be re-evaluated in eight weeks, Brett Siegel of ClutchPoints.com reports."
 Portland Trail Blazers,Ja Morant,Out,"Head coach Micah Nori said Morant met with a doctor in Los Angeles, who gave him a positive outlook on his recovery from the hamstring injury. While Nori declined to update Morant's timetable, he added Morant ""may not be out for as long as we thought,"" Trail Blazers Insider Sean Highkin reports."
 Portland Trail Blazers,Shaedon Sharpe,Out,"Sharpe suffered a torn meniscus in his knee and is expected to miss six months, per Shams Charania of ESPN."
-Sacramento Kings,De'Andre Hunter,Out,Hunter (hip) is out for Sunday's game against the Thunder.
-Sacramento Kings,Zach LaVine,Out,"LaVine is out for Sunday's game against Oklahoma City due to illness, Brandon Rahbar of DailyThunder.com reports."
-Sacramento Kings,Precious Achiuwa,Out,"Achiuwa (ankle) has been ruled out for Sunday's game against the Thunder, Brenden Nunes of KHTK Sactown Sports 1140 reports."
+Sacramento Kings,Zach LaVine,Day-To-Day,"LaVine is out for Sunday's game against Oklahoma City due to illness, Brandon Rahbar of DailyThunder.com reports."
+Sacramento Kings,De'Andre Hunter,Day-To-Day,Hunter (hip) is out for Sunday's game against the Thunder.
+Sacramento Kings,Precious Achiuwa,Day-To-Day,"Achiuwa (ankle) has been ruled out for Sunday's game against the Thunder, Brenden Nunes of KHTK Sactown Sports 1140 reports."
 Sacramento Kings,Maxime Raynaud,Out,Raynaud (knee) has been ruled out for Sunday's game against the Thunder.
 Sacramento Kings,Ben Simmons,Out,"Simmons underwent successful surgery Tuesday to repair a torn right Achilles tendon, James Ham of ESPN 1320 Sacramento reports."
-San Antonio Spurs,De'Aaron Fox,Out,Fox (hip) has been ruled out for Sunday's game against the Jazz.
+San Antonio Spurs,De'Aaron Fox,Day-To-Day,Fox (hip) has been ruled out for Sunday's game against the Jazz.
 San Antonio Spurs,Tobias Harris,Out,"Harris (calf) is out for Wednesday's game against Chicago, Jared Weiss of The Athletic reports."
 San Antonio Spurs,Jayden Quaintance,Out,"Quaintance has been around the team but has not yet been cleared for basketball activities, Matt Guzman of SI.com reports."
 Toronto Raptors,Nate Bittle,Out,"Bittle (foot) has been ruled out for Sunday's game against the Knicks, Zulfi Sheikh of Sportsnet.ca reports."
 Toronto Raptors,Kevin McCullar Jr.,Day-To-Day,"McCullar signed a two-way contract with the Raptors on Thursday, Michael Scotto of HoopsHype.com reports."
 Toronto Raptors,Kawhi Leonard,Out,"Head coach Darko Rajakovic said Wednesday that Leonard (knee) is doing individual on-court work and is progressing well, Michael Grange of Sportsnet.ca reports."
-Utah Jazz,Jaxson Hayes,Out,Hayes (knee) has been ruled out for Sunday's game against the Spurs.
+Utah Jazz,Jaxson Hayes,Day-To-Day,Hayes (knee) has been ruled out for Sunday's game against the Spurs.
 Utah Jazz,Trey Alexander,Out,Alexander won't play Wednesday against the Grizzlies due to a left knee bone bruise.
 Utah Jazz,Lauri Markkanen,Out,"Markkanen has been diagnosed with a non-displaced fracture in his right hand and will be sidelined for at least one month, Shams Charania of ESPN reports."
 Utah Jazz,Jusuf Nurkic,Out,"Nurkic (toe) has begun participating in on-court activities as he continues recovering from a right foot injury sustained during an Oct. 4 preseason game against Denver. He will be re-evaluated in two weeks, the Jazz announced Friday."
 Utah Jazz,Jaren Jackson Jr.,Out,"Jackson has been diagnosed with a torn MCL in his right knee and will be sidelined for 6-to-8 weeks, per Shams Charania of ESPN."
-Washington Wizards,Tre Johnson,Out,"Johnson (back) won't play in Sunday's game against Houston, Josh Robbins of The Athletic reports."
+Washington Wizards,Tre Johnson,Day-To-Day,"Johnson (back) won't play in Sunday's game against Houston, Josh Robbins of The Athletic reports."
 Washington Wizards,Tristan Vukcevic,Out,Vukcevic (hip) has been ruled out for Monday's game against Detroit.
 Washington Wizards,Reece Beekman,Out,The Wizards announced Monday that Beekman sustained a right acromioclavicular joint injury and will be re-evaluated in approximately three weeks.
 Washington Wizards,Justin Champagnie,Out,"Champagnie (foot) is expected to miss several months, per Josh Robbins of The Athletic."
