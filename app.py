@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
 st.title("🏀 NBA Predictor 2026-27")
-st.markdown("Sistema Pro: Ajuste por BPM (Impacto Real del Jugador).")
+st.markdown("Sistema Pro: BPM, H2H, Gráficos y Spread.")
 
 @st.cache_data
 def load_data():
@@ -45,7 +45,6 @@ except Exception as e:
     st.error(f"Error cargando archivos: {e}")
     st.stop()
 
-# Diccionario de BPM
 bpm_dict = dict(zip(bpm_df['player_name'], bpm_df['bpm'])) if len(bpm_df) > 0 else {}
 
 logos = {'Atlanta Hawks': 'atl', 'Boston Celtics': 'bos', 'Brooklyn Nets': 'bkn', 'Charlotte Hornets': 'cha', 'Chicago Bulls': 'chi', 'Cleveland Cavaliers': 'cle', 'Dallas Mavericks': 'dal', 'Denver Nuggets': 'den', 'Detroit Pistons': 'det', 'Golden State Warriors': 'gs', 'Houston Rockets': 'hou', 'Indiana Pacers': 'ind', 'LA Clippers': 'lac', 'Los Angeles Lakers': 'lal', 'Memphis Grizzlies': 'mem', 'Miami Heat': 'mia', 'Milwaukee Bucks': 'mil', 'Minnesota Timberwolves': 'min', 'New Orleans Pelicans': 'no', 'New York Knicks': 'ny', 'Oklahoma City Thunder': 'okc', 'Orlando Magic': 'orl', 'Philadelphia 76ers': 'phi', 'Phoenix Suns': 'phx', 'Portland Trail Blazers': 'por', 'Sacramento Kings': 'sac', 'San Antonio Spurs': 'sa', 'Toronto Raptors': 'tor', 'Utah Jazz': 'utah', 'Washington Wizards': 'wsh'}
@@ -81,11 +80,11 @@ else:
         inj_local = lesiones[lesiones['team'].str.contains(eq_local.split()[-1], case=False, na=False)]
         inj_visita = lesiones[lesiones['team'].str.contains(eq_visita.split()[-1], case=False, na=False)]
         
-        # --- LÓGICA DE AJUSTE POR BPM REAL ---
+        # LÓGICA DE AJUSTE POR BPM REAL
         bpm_perdido_local = 0
         for _, inj in inj_local.iterrows():
             if inj['current_status'] in ['Out', 'Day-To-Day']:
-                bpm = bpm_dict.get(inj['player_name'], 0.0) # Si no lo encuentra, impacto 0
+                bpm = bpm_dict.get(inj['player_name'], 0.0)
                 factor_duda = 0.5 if inj['current_status'] == 'Day-To-Day' else 1.0
                 bpm_perdido_local += (bpm * factor_duda)
         
@@ -96,20 +95,16 @@ else:
                 factor_duda = 0.5 if inj['current_status'] == 'Day-To-Day' else 1.0
                 bpm_perdido_visita += (bpm * factor_duda)
         
-        # Convertir BPM perdido a puntos (1 BPM ≈ 0.8 puntos)
         penalty_local = max(0, bpm_perdido_local * 0.8)
         penalty_visita = max(0, bpm_perdido_visita * 0.8)
         
-        # Ajuste de probabilidad de Ganador
         ajuste_prob = (penalty_visita - penalty_local) * 0.015 
         p_home_ajustada = max(0.05, min(0.95, row['p_home'] + ajuste_prob))
         p_away_ajustada = 1 - p_home_ajustada
         
-        # Totales
         pred_total = row['pred_total_pts'] - (penalty_local + penalty_visita)
         prob_over = 1 - norm.cdf(linea_apuestas, loc=pred_total, scale=sigma)
         
-        # Handicap y Puntos por Equipo
         margen = (p_home_ajustada - 0.5) * 20
         pts_local = (pred_total / 2) + (margen / 2)
         pts_visita = (pred_total / 2) - (margen / 2)
@@ -117,10 +112,22 @@ else:
         
         with st.container():
             col1, col2, col3 = st.columns([2, 2, 2])
+            
             with col1:
                 st.markdown(f"<div style='display:flex; align-items:center;'>{get_logo_html(row['away_team'])} <b>{row['away_team']}</b></div>", unsafe_allow_html=True)
                 st.markdown("<div style='margin-left: 20px; color:gray;'>@</div>", unsafe_allow_html=True)
                 st.markdown(f"<div style='display:flex; align-items:center;'>{get_logo_html(row['home_team'])} <b>{row['home_team']}</b></div>", unsafe_allow_html=True)
+                st.caption(f"Game ID: {row['gameId']}")
+                
+                st.markdown("---")
+                # --- H2H RECUPERADO AQUÍ ---
+                st.markdown("**Historial Directo (Últimos 10)**")
+                if row['h2h_played'] > 0:
+                    st.write(f"⚔️ {row['home_team']}: **{row['h2h_home_wins']}** victorias")
+                    st.write(f"⚔️ {row['away_team']}: **{row['h2h_away_wins']}** victorias")
+                else:
+                    st.write("No hay historial reciente.")
+                
                 st.markdown("---")
                 st.markdown("**Lesiones**")
                 if len(inj_local) > 0:
@@ -129,15 +136,18 @@ else:
                 if len(inj_visita) > 0:
                     st.caption(f"✈️ {eq_visita}:")
                     for _, inj in inj_visita.iterrows(): st.caption(f"- {inj['player_name']} ({inj['current_status']})")
+                
             with col2:
                 st.markdown("**Ganador (Ajustado por BPM)**")
                 st.progress(float(p_home_ajustada))
                 st.write(f"🏠 {eq_local}: **{p_home_ajustada:.1%}**")
                 st.write(f"✈️ {eq_visita}: **{p_away_ajustada:.1%}**")
                 if abs(ajuste_prob) > 0.005: st.caption(f"*(Base: {row['p_home']:.1%})*")
+                
                 st.markdown("---")
                 st.markdown(f"**Spread ({linea_spread})**")
                 st.write(f"🏠 Local: **{prob_local_cubre:.1%}**")
+                
             with col3:
                 st.markdown(f"**Totales (Línea: {linea_apuestas})**")
                 st.write(f"📊 Pred: **{pred_total:.1f} pts**")
@@ -145,8 +155,29 @@ else:
                 st.write(f"⬇️ Under: **{1-prob_over:.1%}**")
                 if prob_over > 0.60: st.success("🔥 VALUE: OVER")
                 elif (1-prob_over) > 0.60: st.success("🔥 VALUE: UNDER")
+                
                 st.markdown("---")
                 st.markdown("**Puntos por Equipo**")
                 st.write(f"🏠 {eq_local}: **{pts_local:.1f}**")
                 st.write(f"✈️ {eq_visita}: **{pts_visita:.1f}**")
+            
+            # --- GRÁFICOS RECUPERADOS AQUÍ ---
+            st.markdown("---")
+            st.markdown("**📈 Tendencia de Puntos Totales (Últimos 5 partidos)**")
+            tendencia_local = get_ultimos_totales(eq_local)
+            tendencia_visita = get_ultimos_totales(eq_visita)
+            
+            if len(tendencia_local) > 0 or len(tendencia_visita) > 0:
+                chart_data = pd.DataFrame()
+                if len(tendencia_local) > 0:
+                    chart_data[eq_local] = tendencia_local['pred_total_pts'].values
+                if len(tendencia_visita) > 0:
+                    chart_data[eq_visita] = tendencia_visita['pred_total_pts'].values
+                st.line_chart(chart_data)
+            else:
+                st.caption("No hay suficientes datos para graficar.")
+            
             st.divider()
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Modelo v8:** BPM + H2H + Gráficos.")
