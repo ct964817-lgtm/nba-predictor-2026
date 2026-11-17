@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
 st.title("🏀 NBA Predictor 2026-27")
-st.markdown("Sistema avanzado: Totales, Ganador, Handicap y Puntos por Equipo.")
+st.markdown("Sistema avanzado: Totales, Ganador (ajustado por lesiones), Handicap y Puntos por Equipo.")
 
 @st.cache_data
 def load_data():
@@ -76,7 +76,7 @@ def get_ultimos_totales(team_name, n=5):
 
 st.sidebar.header("Filtros")
 linea_apuestas = st.sidebar.number_input("Línea Total Puntos", min_value=180.0, max_value=280.0, value=220.5, step=0.5)
-linea_spread = st.sidebar.number_input("Línea Spread (Local)", min_value=-25.0, max_value=25.0, value=-4.5, step=0.5, help="Ingresa el spread del local. Si el local es favorito, usa negativo (ej. -4.5). Si es underdog, positivo (ej. +4.5).")
+linea_spread = st.sidebar.number_input("Línea Spread (Local)", min_value=-25.0, max_value=25.0, value=-4.5, step=0.5)
 
 fechas_disponibles = sorted(df['date'].dt.date.unique())
 fecha_seleccionada = st.sidebar.selectbox("Selecciona una fecha", fechas_disponibles)
@@ -95,6 +95,7 @@ else:
         inj_local = lesiones[lesiones['team'].str.contains(eq_local.split()[-1], case=False, na=False)]
         inj_visita = lesiones[lesiones['team'].str.contains(eq_visita.split()[-1], case=False, na=False)]
         
+        # 1. Calcular penalización en PUNTOS
         penalty_local = 0
         for _, inj in inj_local.iterrows():
             if inj['current_status'] in ['Out', 'Day-To-Day']:
@@ -115,29 +116,30 @@ else:
                 elif ppg >= 15: penalty_visita += (ppg * 0.15 * factor_duda)
                 else: penalty_visita += (ppg * 0.05 * factor_duda)
         
+        # 2. Calcular probabilidad de Ganador AJUSTADA por lesiones
+        # La probabilidad base del modelo es row['p_home']
+        # Si el local tiene más penalización, su probabilidad baja.
+        # Usamos una escala donde 10 puntos de penalización = ~10% menos de probabilidad.
+        ajuste_prob = (penalty_visita - penalty_local) * 0.01 
+        
+        p_home_ajustada = row['p_home'] + ajuste_prob
+        # Mantener la probabilidad entre 5% y 95% para evitar valores absurdos
+        p_home_ajustada = max(0.05, min(0.95, p_home_ajustada))
+        p_away_ajustada = 1 - p_home_ajustada
+        
+        # 3. Calcular totales
         pred_total_base = row['pred_total_pts']
         pred_total = pred_total_base - (penalty_local + penalty_visita)
         
         prob_over = 1 - norm.cdf(linea_apuestas, loc=pred_total, scale=sigma)
         prob_under = 1 - prob_over
         
-        # --- CÁLCULOS DE HANDICAP Y PUNTOS POR EQUIPO ---
-        p_home = row['p_home']
-        
-        # Estimación del margen esperado (diferencia de puntos)
-        # Usamos una escala de 20 puntos para la diferencia máxima
-        margen_esperado = (p_home - 0.5) * 20 
-        
+        # 4. Calcular Handicap y Puntos por Equipo
+        margen_esperado = (p_home_ajustada - 0.5) * 20 
         pts_local_estimados = (pred_total / 2) + (margen_esperado / 2)
         pts_visita_estimados = (pred_total / 2) - (margen_esperado / 2)
         
-        # Calcular probabilidad de cubrir el Spread
-        # Si la línea del local es -4.5, necesitamos que gane por 5 o más.
-        # Usamos el margen esperado y una desviación estándar para el margen (asumimos sigma * 0.8)
         sigma_spread = sigma * 0.8 
-        
-        # Probabilidad de que el local cubra el spread (gane por más de la línea)
-        # Si la línea es negativa (local favorito), necesita ganar por más de abs(linea)
         prob_local_cubre = 1 - norm.cdf(linea_spread, loc=margen_esperado, scale=sigma_spread)
         prob_visita_cubre = 1 - prob_local_cubre
         
@@ -179,14 +181,17 @@ else:
                     st.caption("Sin datos de lesiones actuales.")
                 
             with col2:
-                st.markdown("**Ganador**")
-                st.progress(float(row['p_home']))
-                st.write(f"🏠 {row['home_team']}: **{row['p_home']:.1%}**")
-                st.write(f"✈️ {row['away_team']}: **{row['p_away']:.1%}**")
+                st.markdown("**Ganador (Ajustado)**")
+                st.progress(float(p_home_ajustada))
+                st.write(f"🏠 {row['home_team']}: **{p_home_ajustada:.1%}**")
+                st.write(f"✈️ {row['away_team']}: **{p_away_ajustada:.1%}**")
+                
+                # Mostrar si hubo ajuste
+                if abs(ajuste_prob) > 0.005:
+                    st.caption(f"*(Ajustado por lesiones. Base era {row['p_home']:.1%})*")
                 
                 st.markdown("---")
                 st.markdown(f"**Handicap (Spread: {linea_spread})**")
-                
                 st.write(f"🏠 {eq_local} ({linea_spread}): **{prob_local_cubre:.1%}**")
                 st.write(f"✈️ {eq_visita} ({-linea_spread:+}): **{prob_visita_cubre:.1%}**")
                 
@@ -194,7 +199,7 @@ else:
                 st.markdown(f"**Puntos Totales (Línea: {linea_apuestas})**")
                 
                 if penalty_local + penalty_visita > 0.5:
-                    st.write(f"📊 Predicción: **{pred_total:.1f} pts** *(Ajustado de {pred_total_base:.1f} por lesiones)*")
+                    st.write(f"📊 Predicción: **{pred_total:.1f} pts** *(Ajustado de {pred_total_base:.1f})*")
                 else:
                     st.write(f"📊 Predicción: **{pred_total:.1f} pts**")
                     
@@ -230,6 +235,6 @@ else:
             st.divider()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Modelo v7:** XGBoost + Pace + Ratings + Lesiones + Spread Probabilidades.")
-st.sidebar.markdown(f"**Precisión Ganador:** ~64.7%")
+st.sidebar.markdown("**Modelo v8:** ML + Lesiones (Puntos y Ganador) + Spread.")
+st.sidebar.markdown(f"**Precisión Ganador Base:** ~64.7%")
 st.sidebar.markdown(f"**MAE Puntos:** 12.4 pts")
