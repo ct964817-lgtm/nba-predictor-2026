@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
 st.title("🏀 NBA Predictor 2026-27")
-st.markdown("Sistema Pro con Corrección de Sesgo Ofensivo (+15 pts).")
+st.markdown("Sistema Pro con Corrección de Sesgo y Spread Bidireccional.")
 
 @st.cache_data
 def load_data():
@@ -80,7 +80,6 @@ else:
         inj_local = lesiones[lesiones['team'].str.contains(eq_local.split()[-1], case=False, na=False)]
         inj_visita = lesiones[lesiones['team'].str.contains(eq_visita.split()[-1], case=False, na=False)]
         
-        # LÓGICA DE AJUSTE POR BPM REAL
         bpm_perdido_local = 0
         for _, inj in inj_local.iterrows():
             if inj['current_status'] in ['Out', 'Day-To-Day']:
@@ -102,12 +101,8 @@ else:
         p_home_ajustada = max(0.05, min(0.95, row['p_home'] + ajuste_prob))
         p_away_ajustada = 1 - p_home_ajustada
         
-        # --- CORRECCIÓN DE SESGO OFENSIVO ---
-        # Sumamos +15 puntos a la predicción base para reflejar la realidad de la liga
         SESGO_OFENSIVO = 15.0 
         pred_total_base_ajustada = row['pred_total_pts'] + SESGO_OFENSIVO
-        
-        # Aplicamos penalización por lesiones sobre el total ya corregido
         pred_total = pred_total_base_ajustada - (penalty_local + penalty_visita)
         
         prob_over = 1 - norm.cdf(linea_apuestas, loc=pred_total, scale=sigma)
@@ -116,7 +111,10 @@ else:
         margen = (p_home_ajustada - 0.5) * 20
         pts_local = (pred_total / 2) + (margen / 2)
         pts_visita = (pred_total / 2) - (margen / 2)
+        
+        # --- SPREAD BIDIRECCIONAL ---
         prob_local_cubre = 1 - norm.cdf(linea_spread, loc=margen, scale=sigma * 0.8)
+        prob_visita_cubre = 1 - prob_local_cubre
         
         with st.container():
             col1, col2, col3 = st.columns([2, 2, 2])
@@ -153,12 +151,17 @@ else:
                 
                 st.markdown("---")
                 st.markdown(f"**Spread ({linea_spread})**")
-                st.write(f"🏠 Local: **{prob_local_cubre:.1%}**")
+                # Mostrar ambos lados del Spread
+                if linea_spread > 0:
+                    st.write(f"🏠 {eq_local} (+{linea_spread}): **{prob_local_cubre:.1%}**")
+                    st.write(f"✈️ {eq_visita} (-{linea_spread}): **{prob_visita_cubre:.1%}**")
+                else:
+                    st.write(f"🏠 {eq_local} ({linea_spread}): **{prob_local_cubre:.1%}**")
+                    st.write(f"✈️ {eq_visita} (+{abs(linea_spread)}): **{prob_visita_cubre:.1%}**")
                 
             with col3:
                 st.markdown(f"**Totales (Línea: {linea_apuestas})**")
                 
-                # Mostrar el ajuste de sesgo
                 if abs(SESGO_OFENSIVO) > 0:
                     st.write(f"📊 Pred: **{pred_total:.1f} pts** *(Base: {row['pred_total_pts']:.1f} + Sesgo)*")
                 else:
@@ -193,4 +196,4 @@ else:
             st.divider()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Modelo v9:** BPM + H2H + Gráficos + Sesgo +15 pts.")
+st.sidebar.markdown("**Modelo v9:** BPM + H2H + Gráficos + Sesgo + Spread Bidireccional.")
