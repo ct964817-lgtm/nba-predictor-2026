@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
 st.title("🏀 NBA Predictor 2026-27")
-st.markdown("Sistema Pro: BPM, H2H, Gráficos y Spread.")
+st.markdown("Sistema Pro con Corrección de Sesgo Ofensivo (+15 pts).")
 
 @st.cache_data
 def load_data():
@@ -102,8 +102,16 @@ else:
         p_home_ajustada = max(0.05, min(0.95, row['p_home'] + ajuste_prob))
         p_away_ajustada = 1 - p_home_ajustada
         
-        pred_total = row['pred_total_pts'] - (penalty_local + penalty_visita)
+        # --- CORRECCIÓN DE SESGO OFENSIVO ---
+        # Sumamos +15 puntos a la predicción base para reflejar la realidad de la liga
+        SESGO_OFENSIVO = 15.0 
+        pred_total_base_ajustada = row['pred_total_pts'] + SESGO_OFENSIVO
+        
+        # Aplicamos penalización por lesiones sobre el total ya corregido
+        pred_total = pred_total_base_ajustada - (penalty_local + penalty_visita)
+        
         prob_over = 1 - norm.cdf(linea_apuestas, loc=pred_total, scale=sigma)
+        prob_under = 1 - prob_over
         
         margen = (p_home_ajustada - 0.5) * 20
         pts_local = (pred_total / 2) + (margen / 2)
@@ -120,7 +128,6 @@ else:
                 st.caption(f"Game ID: {row['gameId']}")
                 
                 st.markdown("---")
-                # --- H2H RECUPERADO AQUÍ ---
                 st.markdown("**Historial Directo (Últimos 10)**")
                 if row['h2h_played'] > 0:
                     st.write(f"⚔️ {row['home_team']}: **{row['h2h_home_wins']}** victorias")
@@ -150,18 +157,24 @@ else:
                 
             with col3:
                 st.markdown(f"**Totales (Línea: {linea_apuestas})**")
-                st.write(f"📊 Pred: **{pred_total:.1f} pts**")
+                
+                # Mostrar el ajuste de sesgo
+                if abs(SESGO_OFENSIVO) > 0:
+                    st.write(f"📊 Pred: **{pred_total:.1f} pts** *(Base: {row['pred_total_pts']:.1f} + Sesgo)*")
+                else:
+                    st.write(f"📊 Pred: **{pred_total:.1f} pts**")
+                    
                 st.write(f"⬆️ Over: **{prob_over:.1%}**")
-                st.write(f"⬇️ Under: **{1-prob_over:.1%}**")
+                st.write(f"⬇️ Under: **{prob_under:.1%}**")
+                
                 if prob_over > 0.60: st.success("🔥 VALUE: OVER")
-                elif (1-prob_over) > 0.60: st.success("🔥 VALUE: UNDER")
+                elif prob_under > 0.60: st.success("🔥 VALUE: UNDER")
                 
                 st.markdown("---")
                 st.markdown("**Puntos por Equipo**")
                 st.write(f"🏠 {eq_local}: **{pts_local:.1f}**")
                 st.write(f"✈️ {eq_visita}: **{pts_visita:.1f}**")
             
-            # --- GRÁFICOS RECUPERADOS AQUÍ ---
             st.markdown("---")
             st.markdown("**📈 Tendencia de Puntos Totales (Últimos 5 partidos)**")
             tendencia_local = get_ultimos_totales(eq_local)
@@ -180,4 +193,4 @@ else:
             st.divider()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Modelo v8:** BPM + H2H + Gráficos.")
+st.sidebar.markdown("**Modelo v9:** BPM + H2H + Gráficos + Sesgo +15 pts.")
