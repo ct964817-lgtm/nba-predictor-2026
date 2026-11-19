@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
 st.title("🏀 NBA Predictor 2026-27")
-st.markdown("Sistema Pro con Corrección de Sesgo y Spread Bidireccional.")
+st.markdown("Sistema Pro Calibrado (Sin Sesgo Artificial).")
 
 @st.cache_data
 def load_data():
@@ -101,8 +101,10 @@ else:
         p_home_ajustada = max(0.05, min(0.95, row['p_home'] + ajuste_prob))
         p_away_ajustada = 1 - p_home_ajustada
         
-        SESGO_OFENSIVO = 15.0 
+        # --- SESGO OFENSIVO ELIMINADO (0.0) ---
+        SESGO_OFENSIVO = 0.0 
         pred_total_base_ajustada = row['pred_total_pts'] + SESGO_OFENSIVO
+        
         pred_total = pred_total_base_ajustada - (penalty_local + penalty_visita)
         
         prob_over = 1 - norm.cdf(linea_apuestas, loc=pred_total, scale=sigma)
@@ -112,7 +114,6 @@ else:
         pts_local = (pred_total / 2) + (margen / 2)
         pts_visita = (pred_total / 2) - (margen / 2)
         
-        # --- SPREAD BIDIRECCIONAL ---
         prob_local_cubre = 1 - norm.cdf(linea_spread, loc=margen, scale=sigma * 0.8)
         prob_visita_cubre = 1 - prob_local_cubre
         
@@ -151,7 +152,6 @@ else:
                 
                 st.markdown("---")
                 st.markdown(f"**Spread ({linea_spread})**")
-                # Mostrar ambos lados del Spread
                 if linea_spread > 0:
                     st.write(f"🏠 {eq_local} (+{linea_spread}): **{prob_local_cubre:.1%}**")
                     st.write(f"✈️ {eq_visita} (-{linea_spread}): **{prob_visita_cubre:.1%}**")
@@ -161,12 +161,7 @@ else:
                 
             with col3:
                 st.markdown(f"**Totales (Línea: {linea_apuestas})**")
-                
-                if abs(SESGO_OFENSIVO) > 0:
-                    st.write(f"📊 Pred: **{pred_total:.1f} pts** *(Base: {row['pred_total_pts']:.1f} + Sesgo)*")
-                else:
-                    st.write(f"📊 Pred: **{pred_total:.1f} pts**")
-                    
+                st.write(f"📊 Pred: **{pred_total:.1f} pts**")
                 st.write(f"⬆️ Over: **{prob_over:.1%}**")
                 st.write(f"⬇️ Under: **{prob_under:.1%}**")
                 
@@ -196,4 +191,4 @@ else:
             st.divider()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Modelo v9:** BPM + H2H + Gráficos + Sesgo + Spread Bidireccional.")
+st.sidebar.markdown("**Modelo v10:** BPM + H2H + Gráficos + Sin Sesgo Artificial.")
