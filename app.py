@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
 st.title("🏀 NBA Predictor 2026-27")
-st.markdown("Sistema Pro Calibrado (Sin Sesgo Artificial).")
+st.markdown("Sistema Pro con Filtro de Seguridad y Semáforo de Apuestas.")
 
 @st.cache_data
 def load_data():
@@ -101,10 +101,8 @@ else:
         p_home_ajustada = max(0.05, min(0.95, row['p_home'] + ajuste_prob))
         p_away_ajustada = 1 - p_home_ajustada
         
-        # --- SESGO OFENSIVO ELIMINADO (0.0) ---
         SESGO_OFENSIVO = 0.0 
         pred_total_base_ajustada = row['pred_total_pts'] + SESGO_OFENSIVO
-        
         pred_total = pred_total_base_ajustada - (penalty_local + penalty_visita)
         
         prob_over = 1 - norm.cdf(linea_apuestas, loc=pred_total, scale=sigma)
@@ -117,10 +115,27 @@ else:
         prob_local_cubre = 1 - norm.cdf(linea_spread, loc=margen, scale=sigma * 0.8)
         prob_visita_cubre = 1 - prob_local_cubre
         
+        # --- SEMÁFORO DE SEGURIDAD ---
+        prob_max = max(p_home_ajustada, p_away_ajustada)
+        dif_puntos = abs(pts_local - pts_visita)
+        
+        if prob_max >= 0.65 or dif_puntos >= 8.0:
+            estado = "🟢 ALTA CONFIANZA"
+            color = "green"
+        elif prob_max >= 0.55:
+            estado = "🟡 CONFIANZA MEDIA"
+            color = "orange"
+        else:
+            estado = "🔴 PARTIDO PAREJO"
+            color = "red"
+        
         with st.container():
             col1, col2, col3 = st.columns([2, 2, 2])
             
             with col1:
+                # ETIQUETA DE SEMÁFORO
+                st.markdown(f"<div style='background-color:{color}; padding:5px; border-radius:5px; color:white; text-align:center; font-weight:bold; margin-bottom:10px;'>{estado}</div>", unsafe_allow_html=True)
+                
                 st.markdown(f"<div style='display:flex; align-items:center;'>{get_logo_html(row['away_team'])} <b>{row['away_team']}</b></div>", unsafe_allow_html=True)
                 st.markdown("<div style='margin-left: 20px; color:gray;'>@</div>", unsafe_allow_html=True)
                 st.markdown(f"<div style='display:flex; align-items:center;'>{get_logo_html(row['home_team'])} <b>{row['home_team']}</b></div>", unsafe_allow_html=True)
@@ -191,4 +206,4 @@ else:
             st.divider()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Modelo v10:** BPM + H2H + Gráficos + Sin Sesgo Artificial.")
+st.sidebar.markdown("**Modelo v11:** Semáforo de Confianza integrado.")
