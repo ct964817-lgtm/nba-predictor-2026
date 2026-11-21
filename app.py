@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="NBA Predictor 2026-27", page_icon="🏀", layout="wide")
 st.title("🏀 NBA Predictor 2026-27")
-st.markdown("Sistema Pro con Filtro de Seguridad y Semáforo de Apuestas.")
+st.markdown("Sistema Pro: Filtro de Seguridad y Análisis Defensivo.")
 
 @st.cache_data
 def load_data():
@@ -30,6 +30,12 @@ def load_bpm():
         return pd.read_csv("bpm_jugadores.csv")
     return pd.DataFrame(columns=['player_name', 'bpm'])
 
+@st.cache_data
+def load_def_ratings():
+    if os.path.exists("def_ratings.csv"):
+        return pd.read_csv("def_ratings.csv")
+    return pd.DataFrame(columns=['team_name', 'def_rating'])
+
 @st.cache_resource
 def load_models():
     with open('nba_models_v2.pkl', 'rb') as f:
@@ -39,6 +45,7 @@ try:
     df = load_data()
     lesiones = load_injuries()
     bpm_df = load_bpm()
+    def_df = load_def_ratings()
     models = load_models()
     sigma = models['sigma']
 except Exception as e:
@@ -46,6 +53,7 @@ except Exception as e:
     st.stop()
 
 bpm_dict = dict(zip(bpm_df['player_name'], bpm_df['bpm'])) if len(bpm_df) > 0 else {}
+def_dict = dict(zip(def_df['team_name'], def_df['def_rating'])) if len(def_df) > 0 else {}
 
 logos = {'Atlanta Hawks': 'atl', 'Boston Celtics': 'bos', 'Brooklyn Nets': 'bkn', 'Charlotte Hornets': 'cha', 'Chicago Bulls': 'chi', 'Cleveland Cavaliers': 'cle', 'Dallas Mavericks': 'dal', 'Denver Nuggets': 'den', 'Detroit Pistons': 'det', 'Golden State Warriors': 'gs', 'Houston Rockets': 'hou', 'Indiana Pacers': 'ind', 'LA Clippers': 'lac', 'Los Angeles Lakers': 'lal', 'Memphis Grizzlies': 'mem', 'Miami Heat': 'mia', 'Milwaukee Bucks': 'mil', 'Minnesota Timberwolves': 'min', 'New Orleans Pelicans': 'no', 'New York Knicks': 'ny', 'Oklahoma City Thunder': 'okc', 'Orlando Magic': 'orl', 'Philadelphia 76ers': 'phi', 'Phoenix Suns': 'phx', 'Portland Trail Blazers': 'por', 'Sacramento Kings': 'sac', 'San Antonio Spurs': 'sa', 'Toronto Raptors': 'tor', 'Utah Jazz': 'utah', 'Washington Wizards': 'wsh'}
 
@@ -115,7 +123,22 @@ else:
         prob_local_cubre = 1 - norm.cdf(linea_spread, loc=margen, scale=sigma * 0.8)
         prob_visita_cubre = 1 - prob_local_cubre
         
-        # --- SEMÁFORO DE SEGURIDAD ---
+        # FILTRO DEFENSIVO
+        def_local = def_dict.get(eq_local, 110.0)
+        def_visita = def_dict.get(eq_visita, 110.0)
+        def_total = def_local + def_visita
+        
+        if def_total > 225:
+            defensa_estado = "🔥 Defensas Débiles (Favorece Over)"
+            color_def = "red"
+        elif def_total < 215:
+            defensa_estado = "🛡️ Defensas Fuertes (Favorece Under)"
+            color_def = "blue"
+        else:
+            defensa_estado = "⚖️ Defensas Promedio"
+            color_def = "gray"
+        
+        # SEMÁFORO
         prob_max = max(p_home_ajustada, p_away_ajustada)
         dif_puntos = abs(pts_local - pts_visita)
         
@@ -133,7 +156,6 @@ else:
             col1, col2, col3 = st.columns([2, 2, 2])
             
             with col1:
-                # ETIQUETA DE SEMÁFORO
                 st.markdown(f"<div style='background-color:{color}; padding:5px; border-radius:5px; color:white; text-align:center; font-weight:bold; margin-bottom:10px;'>{estado}</div>", unsafe_allow_html=True)
                 
                 st.markdown(f"<div style='display:flex; align-items:center;'>{get_logo_html(row['away_team'])} <b>{row['away_team']}</b></div>", unsafe_allow_html=True)
@@ -176,6 +198,8 @@ else:
                 
             with col3:
                 st.markdown(f"**Totales (Línea: {linea_apuestas})**")
+                st.markdown(f"<div style='background-color:{color_def}; padding:5px; border-radius:5px; color:white; text-align:center; font-weight:bold; margin-bottom:10px;'>{defensa_estado}</div>", unsafe_allow_html=True)
+                
                 st.write(f"📊 Pred: **{pred_total:.1f} pts**")
                 st.write(f"⬆️ Over: **{prob_over:.1%}**")
                 st.write(f"⬇️ Under: **{prob_under:.1%}**")
@@ -206,4 +230,4 @@ else:
             st.divider()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Modelo v11:** Semáforo de Confianza integrado.")
+st.sidebar.markdown("**Modelo v12:** Filtro Defensivo y Semáforo de Confianza.")
